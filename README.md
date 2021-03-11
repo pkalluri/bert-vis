@@ -11,7 +11,7 @@ You will need to create a directory to contain your document's tokens and activa
 * `tokens.pickle` - which contains the list of the document's tokens.
 * `activations.npz` -  in which each numpy array contains the document's activations at one layer and has shape (# OF TOKENS, WIDTH OF LAYER).
 
-See `data/intro` for an example directory.
+See `data/example` for an example directory.
 
 To visualize the activations, simply run the Jupyter notebook `visualize.ipynb`, setting the parameters to point to your directory (and changing any other parameters you wish).
 This notebook visualizes the evolution of your document's activations in a neat colorful way.
