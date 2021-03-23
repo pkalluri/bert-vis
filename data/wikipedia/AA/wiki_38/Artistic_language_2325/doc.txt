@@ -1,0 +1,37 @@
+Artistic language
+
+An artistic language, or artlang, is a constructed language designed for aesthetic pleasure. Language can be artistic to the extent that artists use it as a source of creativity in art, poetry, calligraphy or as a metaphor to address themes as cultural diversity and the vulnerability of the individual in a globalizing world.
+
+Unlike engineered languages or auxiliary languages, artistic languages often have irregular grammar systems, much like natural languages. Many are designed within the context of fictional worlds, such as J. R. R. Tolkien's Middle-earth. Others can represent fictional languages in a world not patently different from the real world, or have no particular fictional background attached.
+
+There are several different schools of artlang construction. The most prominent is the naturalist school, which seeks to imitate the complexity and historicity of natural languages. Others typically follow a more abstract style, as the intent behind their construction differs. 
+
+Several different genres of constructed languages are classified as 'artistic'. An artistic language may fall into any one of the following groups, depending on the aim of its use.
+Similarly to philosophical languages, artlangs are created in accordance with an initially defined principle in mind.
+
+By far the largest group of artlangs are fictional languages (sometimes also referred to as "professional artlangs"). Fictional languages are intended to be the languages of a fictional world, and are often designed with the intent of giving more depth and an appearance of plausibility to the fictional worlds with which they are associated, and to have their characters communicate in a fashion which is both alien and dislocated. By analogy with the word "conlang", the term "conworld" is used to describe these worlds, inhabited by fictional constructed cultures.
+
+There are two major categories of fictional languages.
+
+Professional fictional languages are those languages created for use in books, movies, television shows, video games, comics, toys, and songs. Prominent examples of works featuring fictional languages include the Middle-earth and "Star Trek" universes, the game Ico and the songs of the French band Magma, singing in Kobaïan.
+
+Internet-based fictional languages are hosted along with their "conworlds" on the Internet, and based at these sites, becoming known to the world through the sites' visitors. An example is Verdurian, the language of Mark Rosenfelder's Verduria on the planet of Almea.
+
+Alternative languages, or "altlangs", speculate on an alternate history and try to reconstruct how a family of natural languages would have evolved if things had been different: e.g., What if Greek civilization had gone on to thrive without a Roman Empire, leaving Greek and not Latin to develop several modern descendants? The language that "would have" evolved is then traced step by step in its evolution, to reach its modern form. An altlang will typically base itself on the core vocabulary of one language and the phonology of another. The best-known language of this category is Brithenig, which initiated the interest among Internet conlangers in devising such alternate-historical languages, like Wenedyk. Brithenig attempts to determine how Romance languages would have evolved had Roman influence in Britain been sufficient to replace Celtic languages with Vulgar Latin, and bases its phonology on that of Welsh. An earlier instance is Philip José Farmer's Winkie language, a relative of the Germanic languages spoken by the Winkies of Oz in "A Barnstormer in Oz". Another example is Anglish, which tries to reconstruct how English could have looked without Latin influence.
+
+Micronational languages are the languages created for use in micronations. Having the citizens learn the language is as much a part of participating in the micronation as minting coins and stamps or participating in government. The members of these micronations meet up and speak the language they have learned when they are participating in these meets. They coin new words and grammatical constructions when needed. Talossan, from R. Ben Madison's Kingdom of Talossa, is by far the best-known example of a micronational language.
+
+Personal languages are ultimately created for one's own edification. The creator does not expect anyone to speak it; the language exists as a work of art. A personal language may be invented for the purpose of having a beautiful language, for self-expression, as an exercise in understanding linguistic principles, or perhaps as an attempt to create a language with an extreme phonemic inventory or system of verbs. Personal languages tend to have short lifespans, and are often displayed on the Internet and discussed on message boards much like Internet-based fictional languages. They are often invented in large numbers by the people who design these languages. However, a few personal languages are used extensively and long-term by their creators (e.g., for writing diaries). Javant Biarujia, the creator of Taneraic, described his personal language (which he terms a hermetic language) thus: "a private pact negotiated between the world at large and the world within me; public words simply could not guarantee me the private expression I sought." The author Robert Dessaix describes the origins of his personal language K: "I wanted words that described reality. So I made them up."
+
+The aim of such languages is to express deep meaning with very few parts. For instance, Toki Pona is generally said to have around 120, 123, or 125 root words and 14 phonemes. It was created by Canadian linguist and translator Sonja Lang for the purpose of simplifying thoughts and communication.
+
+The term jokelang is sometimes applied to conlangs created as jokes. These may be languages intended primarily to sound funny, such as DiLingo, or for some type of satire, often as satire on some aspect of constructed languages.
+
+Some typical jokelangs are:
+
+An experimental language is a constructed language designed for the purpose of exploring some theory of linguistics. Most such languages are concerned with the relation between language and thought; however, languages have been constructed to explore other aspects of language as well. In science fiction, much work has been done on the assumption popularly known as the Sapir–Whorf hypothesis. Artlangs of this type overlap with engineered languages.
+
+See list of constructed languages for a list.
+
+
+

@@ -45,14 +45,14 @@ class GetEmbeddings:
 
         for i in range(0, len(tokenized_texts), self.MAX_INPUT_SIZE):
             start = i
-            end = i + self.MAX_INPUT_SIZE
+            end = min(len(tokenized_texts), i + self.MAX_INPUT_SIZE)
 
             tokenized_texts_subset, segment_ids_subset = tokenized_texts[start:end - 1], segment_ids[start:end - 1]
             tokenized_texts_subset =  ["[CLS]"] + tokenized_texts_subset
             segment_ids_subset = [segment_ids_subset[0]] + segment_ids_subset
             
             data_dir = txt_file[:txt_file.rindex('/')]
-            tokens_file = f'{data_dir}/tokens_{i % self.MAX_INPUT_SIZE}_{self.bert_type}.pickle'
+            tokens_file = f'{data_dir}/tokens_{int(i / self.MAX_INPUT_SIZE)}_{self.bert_type}.pickle'
 
             # Pickle the tokenized text
             f = open(tokens_file, 'wb')
@@ -84,7 +84,7 @@ class GetEmbeddings:
 
                 # token_embeddings is now of shape (13, 512, 768) aka (# layers, # tokens, width of layer)
                 arr = np.array(token_embeddings)
-                activations_file = f'{data_dir}/activations_{i % self.MAX_INPUT_SIZE}_{self.bert_type}.npz'
+                activations_file = f'{data_dir}/activations_{int(i / self.MAX_INPUT_SIZE)}_{self.bert_type}.npz'
                 np.savez(activations_file, *arr)
 
 
