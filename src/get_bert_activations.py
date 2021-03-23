@@ -21,7 +21,7 @@ class GetEmbeddings:
         self.model.eval()
 
         # TODO: explore custom BERT config to increase input size
-        # Note that input files will be clipped to this many tokens
+        # Note that this script segments the text into subsets of 512 tokens and performs the embedding extraction on each subset
         self.MAX_INPUT_SIZE = 512 # default maximum sequence length for BERT
 
 
