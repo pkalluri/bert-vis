@@ -4,7 +4,7 @@ import numpy as np
 
 def reduce_activations(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6) -> np.ndarray:
     """
-    Given the activations, perform the specified dimensionality reduction.
+    Given activations, perform the specified dimensionality reduction.
 
     Returns: Array of shape (LENGTH OF ACTS, DIM)
     """

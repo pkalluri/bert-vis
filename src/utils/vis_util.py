@@ -4,7 +4,7 @@ import numpy as np
 
 def hue_to_rgb(ang, warp=True):
     """
-    Produce an RGB unit vector corresponding to a hue of a given angle.
+    Given a hue of a particular angle, produces a corresponding RGB unit vector.
     Code adapted from Tensorflow Lucid library.
     """
     ang = ang - 360 * (ang // 360)
@@ -36,7 +36,9 @@ def hue_to_rgb(ang, warp=True):
 
 def channels_to_rgbs(X):
     """
-    Convert n-dimensional values to representative 3-dimensional RGB values.
+    Given n-dimensional vectors, converts to representative 3-dimensional RGB values.
+    In particular, the n dimensions are mapped to n colors,
+    and each n-dimensional vector is converted to the corresponding linear combination of the n colors.
     Code adapted from Tensorflow Lucid library.
     """
     if (X < 0).any():
@@ -51,8 +53,6 @@ def channels_to_rgbs(X):
         # convert the ith column (list of values) into a list of vectors all in the chosen direction
         rgbs += X[..., i, None] * color
     # We now have 3D vectors, but we need to normalize them into RGBs
-    ones_col = np.ones(X.shape[:-1])[..., None]  # a list of ones
-    # rgb += ones_col * (X.sum(-1) - X.max(-1))[..., None]
     rgbs /= 1e-4 + np.linalg.norm(rgbs, axis=-1, keepdims=True)  # normalize so each 3-dim vector is unit length
     rgbs *= 255
     return rgbs.astype(int)
