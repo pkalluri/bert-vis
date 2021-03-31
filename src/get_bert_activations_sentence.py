@@ -1,12 +1,13 @@
 import torch
 import numpy as np
-import pickle as pkl
+import pickle
 from transformers import BertTokenizer, BertModel
 from nltk.tokenize import sent_tokenize
 from pathlib import Path
 import os
 import argparse
 import glob
+from tqdm import tqdm
 
 
 class GetEmbeddings:
@@ -19,6 +20,7 @@ class GetEmbeddings:
                                       )
         # Put the model in "evaluation" mode, meaning feed-forward operation.
         self.model.eval()
+        self.MAX_INPUT_SIZE = 512 # default maximum sequence length for BERT
 
 
     def tokenize_and_extract(self, txt_file):
@@ -28,21 +30,21 @@ class GetEmbeddings:
         file.close()
 
         sentences = sent_tokenize(lines)
-
         for i, sent in enumerate(sentences):
             marked_text = sent + " [SEP] "
             tokenized_text = self.tokenizer.tokenize(marked_text)
             segment_id = [0] * len(tokenized_text)
 
-            tokenized_texts_subset =  ["[CLS]"] + tokenized_text
-            segment_ids_subset = [0] + segment_id
+            tokenized_texts_subset =  ["[CLS]"] + tokenized_text[:self.MAX_INPUT_SIZE - 1]
+            segment_ids_subset = [0] + segment_id[:self.MAX_INPUT_SIZE - 1]
             
             data_dir = txt_file[:txt_file.rindex('/')]
-            tokens_file = f'{data_dir}/tokens_sent{i}_{self.bert_type}.pickle'
+            sent_idx = txt_file[txt_file.rindex('_') + 1:][:-4]
+            tokens_file = f'{data_dir}/tokens_{sent_idx}_{self.bert_type}.pickle'
 
             # Pickle the tokenized text
-            f = open(tokens_file, 'wb')
-            pkl.dump(tokenized_texts_subset, f)
+            with open(tokens_file, "wb") as f:
+                pickle.dump(tokenized_texts_subset, f)
 
             # Map the token strings to their vocabulary indeces.
             indexed_tokens = self.tokenizer.convert_tokens_to_ids(tokenized_texts_subset)
@@ -70,7 +72,7 @@ class GetEmbeddings:
 
                 # token_embeddings is now of shape (13, 512, 768) aka (# layers, # tokens, width of layer)
                 arr = np.array(token_embeddings)
-                activations_file = f'{data_dir}/activations_sent{i}_{self.bert_type}.npz'
+                activations_file = f'{data_dir}/activations_{sent_idx}_{self.bert_type}.npz'
                 np.savez(activations_file, *arr)
 
 
@@ -85,10 +87,13 @@ args = parser.parse_args()
 
 Embeddings = GetEmbeddings()
 
-print("data dir: ", args.dir)
+# print("data dir: ", args.dir)
 
-for txt_file in glob.iglob(args.dir + '**/*.txt', recursive=True):
-    print("txt: ", txt_file)
-    Embeddings.tokenize_and_extract(txt_file)
+for txt_file in tqdm(glob.iglob(args.dir + '**/*.txt', recursive=True), total=50000):
+#     print("txt: ", txt_file)
+    try:
+        Embeddings.tokenize_and_extract(txt_file)
+    except Exception as e:
+        print(str(e))
 
     
