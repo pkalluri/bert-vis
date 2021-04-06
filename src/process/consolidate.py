@@ -1,3 +1,5 @@
+"""Given a dataset directory of text files and activations,
+reads and consolidates these into one contexts file and one activations file."""
 import glob
 import os
 import numpy as np
@@ -10,7 +12,7 @@ parent_path = pathlib.Path(__file__).parent.parent.absolute()
 sys.path.insert(0, parent_path)
 from src import references  # Relative import so cwd can be anywhere
 
-# Configs
+# Parameters
 data_path = 'bucket/wikipedia'
 max_docs = None  # Max number of documents to read or None. If None, this is ignored.
 max_contexts = None  # Max number of contexts to read or None. If None, this is ignored.

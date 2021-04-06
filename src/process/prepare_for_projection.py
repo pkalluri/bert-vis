@@ -1,3 +1,5 @@
+"""Given contexts and activations files, generates metadata and acativations TSV files
+that are visualisable with the tensorflow embedding projector: projector.tensorflow.org"""
 import pickle
 import numpy as np
 import os
