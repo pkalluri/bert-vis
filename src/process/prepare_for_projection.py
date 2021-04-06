@@ -2,8 +2,11 @@ import pickle
 import numpy as np
 import os
 import nltk
-
-from src.utils import context_util
+import pathlib
+import sys
+parent_path = pathlib.Path(__file__).parent.parent.absolute()
+sys.path.insert(0, parent_path)
+from src.utils import context_util  # Relative import so cwd can be anywhere
 
 # Parameters
 data_dir = 'local/wikipedia/1000docs_25681contexts_50maxtokens'
