@@ -8,9 +8,9 @@ import random
 random.seed(0)
 import pathlib
 import sys
-parent_path = pathlib.Path(__file__).parent.parent.absolute()
+parent_path = str(pathlib.Path(__file__).parent.parent.parent.absolute())
 sys.path.insert(0, parent_path)
-from src import references  # Relative import so cwd can be anywhere
+from src import references
 
 # Parameters
 data_path = 'bucket/wikipedia'

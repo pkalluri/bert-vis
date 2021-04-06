@@ -6,12 +6,12 @@ import os
 import nltk
 import pathlib
 import sys
-parent_path = pathlib.Path(__file__).parent.parent.absolute()
+parent_path = str(pathlib.Path(__file__).parent.parent.parent.absolute())
 sys.path.insert(0, parent_path)
-from src.utils import context_util  # Relative import so cwd can be anywhere
+from src.utils import context_util
 
 # Parameters
-data_dir = 'local/wikipedia/1000docs_25681contexts_50maxtokens'
+data_dir = 'bucket/wikipedia/1000docs_19513contexts_30maxtokens'
 contexts_filename = 'contexts.pickle'
 acts_filename = 'activations.npz'
 only_metadata = False
