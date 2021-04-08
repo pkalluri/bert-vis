@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from bokeh.palettes import Inferno, Category10, Category20, Category20c, Pastel1, Pastel2, Bokeh, Plasma
 
 
 def hue_to_rgb(ang, warp=True):
@@ -56,3 +57,16 @@ def channels_to_rgbs(X):
     rgbs /= 1e-4 + np.linalg.norm(rgbs, axis=-1, keepdims=True)  # normalize so each 3-dim vector is unit length
     rgbs *= 255
     return rgbs.astype(int)
+
+
+BIG_PALETTE = Plasma[256]
+
+
+def categorical_list_to_color_list(categorical_list, palette=BIG_PALETTE, reverse_palette=False):
+    if reverse_palette:
+        palette = palette[::-1]
+    categories = set(categorical_list)
+    n_colors_per_category = len(palette) // (len(categories) - 1)
+    sampled_palette = palette[::n_colors_per_category] + (palette[-1],)
+    categories_to_colors = {category: sampled_palette[i] for i, category in enumerate(categories)}
+    return [categories_to_colors[elt] for elt in categorical_list]
