@@ -59,7 +59,7 @@ def channels_to_rgbs(X):
     return rgbs.astype(int)
 
 
-DEFAULT_PALETTE = Bokeh[8]
+DEFAULT_PALETTE = Bokeh[8][::2]
 BIG_PALETTE = Plasma[256]
 
 
