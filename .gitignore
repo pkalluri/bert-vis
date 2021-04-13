@@ -5,3 +5,4 @@ bucket
 .DS_Store
 .idea/
 data/.DS_Store
+*.html
