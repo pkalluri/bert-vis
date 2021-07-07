@@ -7,7 +7,6 @@ from bokeh.models import Div, HoverTool, ColumnDataSource, PanTool, BoxZoomTool,
 from bokeh.palettes import Inferno, Category10, Category20, Category20c, Pastel1, Pastel2, Bokeh, Plasma
 from bokeh.models.annotations import Legend, LegendItem
 import math
-from src.utils import vis_util
 
 
 def hue_to_rgb(ang, warp=True):
@@ -80,24 +79,24 @@ def categorical_list_to_color_list(categorical_list, palette=BIG_PALETTE, revers
     return [categories_to_colors[elt] for elt in categorical_list]
 
 
-def empty_plot(dim=250, darkmode=False):
-    p = figure(width=dim, height=dim)
+def empty_plot(dim=None, width=250, height=250, darkmode=False):
+    if dim:
+        width, height = dim, dim
+    p = figure(width=width, height=height)
     p.axis.visible = False
     p.grid.visible = False
     if darkmode:
-        p.background_fill_color = 'lightgrey'
+        p.background_fill_color = 'grey'
     return p
 
 
-def custom_hover_tool(label='{context html}'):
+def custom_hover_tool(label='hover label', border=True):
+    if border:
+        style = 'border-bottom-style:solid; border-width:1px;'
+    else:
+        style = ''
     hover_tool = HoverTool(
-        tooltips=
-        f"""<div style=
-            '
-            border-bottom-style:solid;
-            border-width:1px;
-            '
-            >@{label}</div>"""
+        tooltips = f"""<div style='{style}'>@{{{label}}}</div>"""
     )
     return hover_tool
 
@@ -222,3 +221,30 @@ def visualize_columns(contexts, layers, acts_tag, color_cols):
         title = Div(text=f'{acts_tag}', align='center')
         return [title] + [plot_binary_columns(contexts, layer, acts_tag, color_cols, legend=(i == 0))
                           for i, layer in enumerate(layers)]
+
+
+def custom_bokeh_tooltip(label, border=True):
+    if border:
+        style = 'border-bottom-style:solid; border-width:1px;'
+    else:
+        style = ''
+    return f"""<div style='{style}'>@{{{label}}}</div>"""
+
+
+# def visualize_properties(contexts, layers, acts_tag, properties):
+#     """
+#     Given a list of layers, creates a plot of each layer,
+#     colorized to depict the info in the specified columns in the contexts dataframe.
+#     TODO: document requirements of contexts dataframe.
+#     """
+#     if len(properties) == 0:
+#         title = Div(text=f'{acts_tag}<br>' + ' / '.join(properties.keys()), align='center')
+#         return [title] + [plot_plain(contexts, layer, acts_tag, legend=(i == 0)) for i, layer in enumerate(layers)]
+#     elif len(properties) == 1:
+#         title = Div(text=f'{acts_tag}<br>' + ' / '.join(properties.keys()), align='center')
+#         return [title] + [plot_categorical_column(contexts, layer, acts_tag, properties[0], legend=(i == 0))
+#                           for i, layer in enumerate(layers)]
+#     else:
+#         title = Div(text=f'{acts_tag}', align='center')
+#         return [title] + [plot_binary_columns(contexts, layer, acts_tag, properties, legend=(i == 0))
+#                           for i, layer in enumerate(layers)]
