@@ -31,8 +31,8 @@ layers = {}
 n_docs_consolidated = 0
 n_long_docs = 0
 for toks_path in toks_paths:
-    if os.path.split(toks_path)[-1].startswith(references.CONTEXTS_BASENAME):
-        print(f'Skipping {references.CONTEXTS_BASENAME} path: ' + toks_path)
+    if os.path.split(toks_path)[-1].startswith(references.CONTEXTS_BASE):
+        print(f'Skipping {references.CONTEXTS_BASE} path: ' + toks_path)
         continue  # Skip
     with open(toks_path, 'rb') as f:
         toks = pickle.load(f)
@@ -47,7 +47,7 @@ for toks_path in toks_paths:
         context = (toks, tok_i)
         contexts.append(context)
     # Add new acts
-    acts_path = toks_path.replace(references.TOKENS_BASENAME, references.ACTIVATIONS_BASENAME).replace(references.TOKENS_EXTENSION, references.ACTIVATIONS_EXTENSION)
+    acts_path = toks_path.replace(references.TOKENS_BASE, references.ACTIVATIONS_BASE).replace(references.TOKENS_EXT, references.ACTIVATIONS_EXT)
     acts = np.load(acts_path)
     for layer in acts.files:
         if layer not in layers:
@@ -67,8 +67,8 @@ out_dir_path = os.path.join(
     f'{n_docs_consolidated}docs_{len(contexts)}contexts_{max_toks}maxtokens'
 )
 os.mkdir(out_dir_path)
-consolidated_contexts_fn = f'{references.CONTEXTS_BASENAME}.pickle'
-consolidated_acts_fn = f'{references.ACTIVATIONS_BASENAME}.npz'
+consolidated_contexts_fn = f'{references.CONTEXTS_BASE}.pickle'
+consolidated_acts_fn = f'{references.ACTIVATIONS_BASE}.npz'
 with open(os.path.join(out_dir_path, consolidated_contexts_fn), 'wb') as f:
     pickle.dump(contexts, f)
 np.savez(os.path.join(out_dir_path, consolidated_acts_fn), **layers)
