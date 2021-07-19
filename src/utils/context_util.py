@@ -1,5 +1,8 @@
 """Helpers for handling contexts. Contexts are typically tuples (doc's tokens, index of embedded token)"""
-from src.utils import html_util
+import sys
+import os
+sys.path.insert(0, os.path.abspath('..'))
+from utils import html_util
 
 
 def bracket(s):
@@ -45,9 +48,9 @@ def context_plaintext(toks, tok_pos):
     return context_str(toks, tok_pos, bracket)
 
 
-def context_html(doc, pos):
-    """Get a string representation of the context: the doc with emphasis on the embedded token."""
-    return context_str(doc, pos, html_util.highlight_html)
+def context_html(doc, pos, highlighter=html_util.highlight):
+    """Get a html representation of the context: the doc with emphasis on the embedded token."""
+    return context_str(doc, pos, highlighter)
 
 
 def abbreviated_context_html(toks, tok_pos, n_context_tokens=2):
