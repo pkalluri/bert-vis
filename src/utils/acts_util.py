@@ -3,6 +3,18 @@ from sklearn.manifold import TSNE
 import numpy as np
 
 
+def reduce_activations(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6) -> np.ndarray:
+    """
+    Given activations, perform the specified dimensionality reduction.
+
+    Returns: Array of shape (LENGTH OF ACTS, DIM)
+    """
+    reducer = ChannelReducer(dim, reduction)
+    if reduction == 'NMF':  # NMF requires activations to be positive
+        acts = get_positive_activations(acts)
+    return reducer._reducer.fit_transform(acts)
+
+
 def fit_components(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6) -> (np.ndarray, np.ndarray):
     """
     Given activations, perform the specified dimensionality reduction.
