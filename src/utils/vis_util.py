@@ -164,9 +164,9 @@ def plot_binary_columns(contexts, layer, acts_tag, color_cols, legend=False):
             }
         )
         if legend:
-            p.circle('x', 'y', color=vis_util.DEFAULT_PALETTE[col_idx], legend_label=col, source=source)
+            p.circle('x', 'y', color=DEFAULT_PALETTE[col_idx], legend_label=col, source=source)
         else:
-            p.circle('x', 'y', color=vis_util.DEFAULT_PALETTE[col_idx], source=source)
+            p.circle('x', 'y', color=DEFAULT_PALETTE[col_idx], source=source)
 
     p.tools = [PanTool(), WheelZoomTool(), BoxZoomTool(), ResetTool(), custom_hover_tool()]
     return p
