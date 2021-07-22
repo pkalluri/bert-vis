@@ -14,12 +14,14 @@ parent_path = str(pathlib.Path(__file__).parent.parent.parent.absolute())
 sys.path.insert(0, parent_path)
 
 
+# Args
 argparser = argparse.ArgumentParser()
-argparser.add_argument('data')
-argparser.add_argument('-n', '--neighbors', type=int)
+argparser.add_argument('data', help='Data directory containing one contexts and one activations file.')
+argparser.add_argument('-n', '--neighbors', type=int, help='Number of neighbors.')
 args = argparser.parse_args()
 
 
+# Prepping filenames
 data_path = os.path.abspath(args.data)
 contexts_filename = 'contexts.pickle'
 acts_filename = 'activations.npz'
@@ -32,7 +34,7 @@ with open(os.path.join(data_path, contexts_filename), 'rb') as f:
 acts = np.load(os.path.join(data_path, acts_filename))
 
 
-# Nearest neighbor models - for facilitating fast nearest neighbor search
+# Build and save nearest neighbor models - for facilitating fast nearest neighbor search
 knn_models_path = os.path.join(data_path, knn_models_filename)
 with open(knn_models_path, 'wb') as knn_models_file:
     for layer in acts.files:

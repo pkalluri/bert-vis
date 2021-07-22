@@ -1,5 +1,5 @@
-"""Given a data directory containing many subdirectories, where each subdirectory contains an acts and contexts file, consolidates all into
-one acts file and one contexts file."""
+"""Given a data directory containing many subdirectories, where each subdirectory contains an acts and contexts file,
+consolidates all into one acts file and one contexts file."""
 import numpy as np
 import pickle
 import glob
@@ -8,12 +8,12 @@ import argparse
 
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument('data')
-argparser.add_argument('-c', '--contexts', action='store_true', default=False)
+argparser.add_argument('data', help='Dataset directory (directory should contain many subdirectories, where each subdirectory contains one contexts and one activations file)')
+argparser.add_argument('-c', '--contexts', action='store_true', default=False, help='Consolidate contexts files?')
 contexts_path = 'contexts.pickle'
-argparser.add_argument('-a', '--acts', action='store_true', default=False)
+argparser.add_argument('-a', '--acts', action='store_true', default=False, help='Consolidate activations files?')
 acts_path = 'activations.npz'
-argparser.add_argument('-l', '--layers', nargs='+')
+argparser.add_argument('-l', '--layers', nargs='+', help='Which layers to consolidate')
 args = argparser.parse_args()
 
 contexts = [] if args.contexts else None
