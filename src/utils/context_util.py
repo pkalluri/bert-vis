@@ -15,7 +15,7 @@ def doc_str(toks):
 
 def context_str(toks, pos, marker=bracket, masker=None, masker_marker=None, token_styler=lambda a: a):
     """Get a string representation of the context: i.e. the doc with emphasis on the embedded token."""
-    return contexts_str(toks, [pos])
+    return contexts_str(toks, [pos], marker=marker, masker=masker, masker_marker=masker_marker, token_styler=token_styler)
 
 
 def contexts_str(toks, positions, marker=bracket, masker=None, masker_marker=None, token_styler=lambda a: a):
