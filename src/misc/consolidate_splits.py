@@ -5,47 +5,47 @@ import pickle
 import glob
 import os
 import argparse
+import sys
+sys.path.insert(0, os.path.abspath('.'))  # add CWD to path
+from src import references as refs
 
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument('data', help='Dataset directory (directory should contain many subdirectories, where each subdirectory contains one contexts and one activations file)')
+argparser.add_argument('data_path', help='Dataset directory (directory should contain many subdirectories, where each subdirectory contains one contexts and one activations file)')
 argparser.add_argument('-c', '--contexts', action='store_true', default=False, help='Consolidate contexts files?')
-contexts_path = 'contexts.pickle'
 argparser.add_argument('-a', '--acts', action='store_true', default=False, help='Consolidate activations files?')
-acts_path = 'activations.npz'
 argparser.add_argument('-l', '--layers', nargs='+', help='Which layers to consolidate')
 args = argparser.parse_args()
 
-contexts = [] if args.contexts else None
-layer_to_acts = {} if args.acts else None
+corpus_contexts = [] if args.contexts else None
+corpus_acts = {} if args.acts else None
 first_subdir = True
-for subdir in glob.iglob(os.path.join(args.data, '*')):
+for subdir in glob.iglob(os.path.join(args.data_path, '*')):
     print(f'Found {subdir}.')
     if os.path.isdir(subdir) and 'docs' in subdir:
         print(f'Loading {subdir}.')
         if args.contexts:
             pickle_path = glob.iglob(os.path.join(subdir, '*.pickle')).__next__()
-            with open(pickle_path, 'rb') as f:
-                new_contexts = pickle.load(f)
-            contexts.extend(new_contexts)
+            new_contexts = pickle.load(open(pickle_path, 'rb'))
+            corpus_contexts.extend(new_contexts)
 
         if args.acts:
             npz_path = glob.iglob(os.path.join(subdir, '*.npz')).__next__()
-            layer_to_new_acts = np.load(npz_path)
+            new_acts = np.load(npz_path)
             if first_subdir:
-                layer_to_acts.update(layer_to_new_acts)
-                layers = layer_to_new_acts.files
+                corpus_acts.update(new_acts)
+                layers = new_acts.files
                 first_subdir = False
             else:
                 for layer in layers:
-                    layer_to_acts[layer] = np.concatenate([layer_to_acts[layer], layer_to_new_acts[layer]])
+                    corpus_acts[layer] = np.concatenate([corpus_acts[layer], new_acts[layer]])
 
         print('writing')
         if args.contexts:
-            pickle.dump(contexts, open(os.path.join(args.data, contexts_path), 'wb'))
-            print(len(contexts))
+            pickle.dump(corpus_contexts, open(os.path.join(args.data_path, refs.contexts_fn), 'wb'))
+            print(len(corpus_contexts))
         if args.acts:
-            np.savez(os.path.join(args.data, acts_path), **layer_to_acts)
-            print(layer_to_acts[layers[0]].shape)
+            np.savez(os.path.join(args.data_path, refs.acts_fn), **corpus_acts)
+            print(corpus_acts[layers[0]].shape)
     else:
         print(f'Skipping {subdir}.')

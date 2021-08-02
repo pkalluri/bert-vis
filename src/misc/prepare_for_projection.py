@@ -5,22 +5,19 @@ import numpy as np
 import os
 import nltk
 import re
-import pathlib
 import sys
-parent_path = str(pathlib.Path(__file__).parent.parent.parent.absolute())
-sys.path.insert(0, parent_path)
+sys.path.insert(0, os.path.abspath('.'))  # add CWD to path
+from src import references as refs
 from src.utils import context_util
 
 # Parameters
 data_dir = 'bucket/wikipedia/1000docs_19513contexts_30maxtokens'
-contexts_filename = 'contexts.pickle'
-acts_filename = 'activations.npz'
 only_metadata = False  # If True, will only generate metadata file and will not generate activations files.
 
 # Load contexts and acts
-with open(os.path.join(os.path.abspath(data_dir), contexts_filename), 'rb') as f:
+with open(os.path.join(os.path.abspath(data_dir), refs.contexts_fn), 'rb') as f:
     contexts = pickle.load(f)
-acts = np.load(os.path.join(data_dir, acts_filename))
+acts = np.load(os.path.join(data_dir, refs.acts_fn))
 
 if not only_metadata:
     print('Saving activations')
