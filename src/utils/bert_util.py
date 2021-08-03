@@ -5,11 +5,10 @@ import torch
 import itertools
 
 
-def get_contexts_and_acts(docs:List, tokenized=False, layers:List[str]=None) -> (List[Tuple], List[np.ndarray]):
+def get_contexts_and_acts(docs:List, tokenized=False, layers:List[str]=None) -> (List[Tuple], Dict[str,np.ndarray]):
     """Given a list of docs, tokenize and return all contexts, along with layers' hidden activations."""
     tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
     model = BertModel.from_pretrained('bert-base-cased', output_hidden_states=True)
-
     docs_contexts = []
     docs_acts = {}
     first_doc = True
@@ -27,8 +26,8 @@ def get_contexts_and_acts(docs:List, tokenized=False, layers:List[str]=None) -> 
         # save acts
         new_acts = torch.squeeze(torch.stack(outputs.hidden_states, dim=0), dim=1)
         if not layers:
-            layers = list(range(len(new_acts)))
-        new_acts = {layer: new_acts[layer].detach().numpy() for layer in layers}
+            layers = [f'arr_{i}' for i in range(len(new_acts))]
+        new_acts = {layer: new_acts[layer_idx].detach().numpy() for layer_idx, layer in enumerate(layers)}
         if first_doc:
             docs_acts = new_acts
             first_doc = False
@@ -45,18 +44,18 @@ def get_toks_and_acts(doc, tokenized=False) -> (List[str], Dict[str, np.ndarray]
     return doc, acts
 
 
-def get_masked_variants(doc: List[str], mask_lengths:List[int]) -> List[List[str]]:
+def get_masked_variants(doc: List[str], mask_lengths:List[int], verbose=False) -> List[List[str]]:
     """Returns every variant of the given doc, where a variant is the given doc
     masked with a valid number of masks (as specified in mask_lengths)."""
     masks:List[Tuple] = []  # a list of all masks (of varying length)
     for mask_len in mask_lengths:
-        print(f'getting all masks with len {mask_len}')
+        if verbose: print(f'getting all masks with len {mask_len}')
         assert(mask_len <= len(doc)-2)  # CLS and SEP should never be masked
         masks.extend(itertools.combinations(range(len(doc)-2), mask_len))
-    print('got masks')
+    if verbose: print('got masks')
     variants: List[List[str]] = []  # a list of all variant sequences
     for mask in masks:
-        print('applying mask', mask)
+        if verbose: print('applying mask', mask)
         variant = doc.copy()
         for tok_idx in mask:
             variant[tok_idx+1] = '[MASK]'  # skip over CLS token
