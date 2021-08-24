@@ -1,7 +1,6 @@
 .ipynb_checkpoints
 __pycache__/
-bucket
+big-data
 .DS_Store
 .idea/
-data/.DS_Store
 *.html
