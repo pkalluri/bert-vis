@@ -44,7 +44,7 @@ def context_plaintext(toks, pos):
     return context_str(toks, pos)
 
 
-def context_html(toks, pos, marker=html_util.highlighter(), masker=None, masker_marker=None, token_styler=lambda a: a):
+def context_html(toks, pos, marker=html_util.highlighter(), masker=html_util.highlighter('black'), masker_marker=None, token_styler=lambda a: a):
     """Get a html representation of the context: the doc with emphasis on the embedded token."""
     return context_str(toks, pos, marker=marker, masker=masker, masker_marker=masker_marker, token_styler=token_styler)
 
