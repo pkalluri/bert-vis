@@ -1,6 +1,6 @@
-CONTEXTS_BASE = 'contexts'
-CONTEXTS_EXT = 'pickle'
-TOKENS_BASE = 'tokens'
-TOKENS_EXT = 'pickle'
-ACTIVATIONS_BASE = 'activations'
-ACTIVATIONS_EXT = 'npz'
+doc_fn = 'doc.txt'
+toks_fn = 'tokens.pickle'
+acts_fn = 'activations.npz'
+contexts_fn = 'contexts.pickle'
+knn_models_fn = 'knn_models.pickle'
+
