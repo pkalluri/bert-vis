@@ -91,10 +91,11 @@ def empty_plot(size=None, width=250, height=250, darkmode=False):
     """Create a simple plot."""
     if size:
         width, height = size, size
-    p = figure(width=width, height=height)
+    p = figure(frame_width=width, frame_height=height)
+    p.toolbar.logo = None
     p.axis.visible = False
     p.grid.visible = False
-    p.border_fill_color = 'grey'
+    p.border_fill_color = 'black'
     if darkmode:
         p.background_fill_color = 'grey'
     return p
@@ -135,7 +136,7 @@ def plot_plain(contexts, layer, acts_tag, darkmode=True, size=300):
     return p
 
 
-def plot_binary_columns(contexts, layer, acts_tag, color_cols, legend=False, size=300):
+def plot_binary_columns(contexts, layer, acts_tag, color_cols, legend=False, size=300, layerwise=False):
     """
     Given a layer, and a list of binary columns in the contexts dataframe,
     plots all activations at the specified layer, colorized to visualize all the specified columns.
@@ -180,16 +181,17 @@ def plot_binary_columns(contexts, layer, acts_tag, color_cols, legend=False, siz
     return p
 
 
-def plot_categorical_column(contexts, layer, acts_tag, color_col, legend=False, size=300):
+def plot_categorical_column(contexts, layer, acts_tag, color_col, legend=False, size=300, layerwise=False):
     """
     Given a layer and a categorical column in the contexts dataframe,
     plots all activations at the specified layer, colorized to visualize the specified column.
     TODO: document requirements of contexts dataframe.
     """
     p = empty_plot(size=size)
-    # if legend:  # add legend
-        # p.height += 10
-        # p.add_layout(Legend(orientation='horizontal', label_text_font_size='6pt', label_width=10), 'above')
+    if legend:  # add legend
+        p.add_layout(Legend(orientation='horizontal', label_text_font_size='6pt', label_width=10), 'above')
+    if layerwise:
+        color_col = f'{layer} {color_col}'
 
     source = ColumnDataSource(
         {
@@ -212,11 +214,13 @@ def plot_categorical_column(contexts, layer, acts_tag, color_col, legend=False, 
     return p
 
 
-def visualize_columns(contexts:pd.DataFrame, layers, acts_tag:str, color_cols:List[str], size=300):
+def visualize_columns(contexts:pd.DataFrame, layers, acts_tag:str, color_cols:List[str], size=300, layerwise=False):
     """
     Given a contexts dataframe of layers' points and properties, creates a list
-    containing a plot of each layers' points, with points colorized to depict the info
-    in the specified columns in the contexts dataframe.
+    containing a plot of each layers' points (defined by the acts_tag), with points colorized to depict the info
+    in the specified columns in the contexts dataframe (specified by the color_cols).
+    If layerwise is True, then the color_cols are interpreted not as a static property of the context,
+    but rather a property that is different at each layer.
     TODO: document requirements of contexts dataframe.
     """
     if len(color_cols) == 0:
@@ -224,11 +228,11 @@ def visualize_columns(contexts:pd.DataFrame, layers, acts_tag:str, color_cols:Li
         return [title] + [plot_plain(contexts, layer, acts_tag, size=300) for i, layer in enumerate(layers)]
     elif len(color_cols) == 1:
         title = Div(text=f'{acts_tag}<br>' + ' / '.join(color_cols), align='center')
-        return [title] + [plot_categorical_column(contexts, layer, acts_tag, color_cols[0], legend=(i == 0), size=size)
+        return [title] + [plot_categorical_column(contexts, layer, acts_tag, color_cols[0], legend=(i == 0), size=size, layerwise=layerwise)
                           for i, layer in enumerate(layers)]
     else:
         title = Div(text=f'{acts_tag}', align='center')
-        return [title] + [plot_binary_columns(contexts, layer, acts_tag, color_cols, legend=(i == 0), size=size)
+        return [title] + [plot_binary_columns(contexts, layer, acts_tag, color_cols, legend=(i == 0), size=size, layerwise=layerwise)
                           for i, layer in enumerate(layers)]
 
 
