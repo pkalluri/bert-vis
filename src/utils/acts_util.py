@@ -115,12 +115,12 @@ def normalize(acts: np.ndarray, mean_centered=False) -> np.ndarray:
     return acts/largest_magnitude
 
 
-# def spherize(acts: np.ndarray) -> np.ndarray:
-#     """
-#     Return spherized activations, such that the magnitude of all activations is 1,
-#     """
-#     norms = np.linalg.norm(acts, axis=1).reshape(-1, 1)
-#     return acts/norms
+def spherize(acts: np.ndarray) -> np.ndarray:
+    """
+    Return spherized activations, such that the magnitude of all activations is 1,
+    """
+    norms = np.linalg.norm(acts, axis=1).reshape(-1, 1)
+    return acts/norms
 
 
 # def distance(act1:np.ndarray, act2:np.ndarray, cosine_distance=True) -> float:
