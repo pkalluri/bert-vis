@@ -26,7 +26,7 @@ def get_contexts_and_acts(docs:List, tokenized=False, layers:List[str]=None) -> 
         # save acts
         new_acts = torch.squeeze(torch.stack(outputs.hidden_states, dim=0), dim=1)
         if not layers:
-        layers = [f'arr_{i}' for i in range(len(new_acts))]
+            layers = [f'arr_{i}' for i in range(len(new_acts))]
         new_acts = {layer: new_acts[layer_idx].detach().numpy() for layer_idx, layer in enumerate(layers)}
         if first_doc:
             docs_acts = new_acts
@@ -42,6 +42,7 @@ def get_toks_and_acts(doc, tokenized=False) -> (List[str], Dict[str, np.ndarray]
     contexts, acts = get_contexts_and_acts([doc], tokenized=tokenized)
     doc, _ = contexts[0]
     return doc, acts
+
 
 def get_masked_variants(doc: List[str], mask_lengths:List[int], verbose=False) -> List[List[str]]:
     """Returns every variant of the given doc, where a variant is the given doc

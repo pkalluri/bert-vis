@@ -113,3 +113,22 @@ def normalize(acts: np.ndarray, mean_centered=False) -> np.ndarray:
         acts = acts - np.nanmin(acts)
     largest_magnitude = np.nanmax(np.linalg.norm(acts))
     return acts/largest_magnitude
+
+
+# def spherize(acts: np.ndarray) -> np.ndarray:
+#     """
+#     Return spherized activations, such that the magnitude of all activations is 1,
+#     """
+#     norms = np.linalg.norm(acts, axis=1).reshape(-1, 1)
+#     return acts/norms
+
+
+# def distance(act1:np.ndarray, act2:np.ndarray, cosine_distance=True) -> float:
+#     """
+#     Return euclidean or cosine distance between the two acts.
+#     """
+#     if cosine_distance:
+#         act1 = act1/np.linalg.norm(act1)
+#         act2 = act2/np.linalg.norm(act2)
+#     return np.linalg.norm
+

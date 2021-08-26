@@ -3,4 +3,5 @@ toks_fn = 'tokens.pickle'
 acts_fn = 'activations.npz'
 contexts_fn = 'contexts.pickle'
 knn_models_fn = 'knn_models.pickle'
-
+sphere_dir = 'sphere'
+standard_dir = 'standard'
