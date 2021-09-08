@@ -6,8 +6,8 @@ from nltk.tokenize import sent_tokenize
 root_dir = '/john1/scr1/baom/text'
 wiki_dirs = [f'{root_dir}/AA', f'{root_dir}/AB', f'{root_dir}/AC']
 
-# race_tokens = ['Asian', 'African', 'Hispanic', 'Latino', 'Native', 'Indigenous', 'Islander', 'White', 'Caucasian']
-race_tokens = ['gender', ' race', 'racial', 'trans ', 'trans-', 'immigration', 'immigrant', 'immigrate']
+# search_tokens = ['Asian', 'African', 'Hispanic', 'Latino', 'Native', 'Indigenous', 'Islander', 'White', 'Caucasian']
+search_tokens = ['gender', ' race', 'racial', 'trans ', 'trans-', 'immigration', 'immigrant', 'immigrate']
 
 hits = []
 
@@ -24,7 +24,7 @@ for wiki_dir in wiki_dirs:
                     text = wiki_file['text']
 
                     contained_tokens = []
-                    for i in race_tokens:
+                    for i in search_tokens:
                         if i not in text:
                             continue
                         else:
