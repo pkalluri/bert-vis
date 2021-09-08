@@ -1,4 +1,4 @@
-"""Given any data directory containing a doc.txt file, uses BERT to generate
+"""Given any data directory containing a doc.txt file, uses BERT or GPT to generate
 a corresponding tokens.pickle file and a corresponding activations.npz file."""
 from transformers import GPT2Tokenizer, GPT2Model, BertTokenizer, BertModel
 import os
@@ -17,25 +17,17 @@ max_docs = None  # Max number of documents to read or None. If None, this is ign
 max_contexts = None  # Max number of contexts to read or None. If None, this is ignored.
 max_toks = 30  # Max number of tokens in an acceptable document. If None, this is ignored.
 
-model_type = 'bert'
-# model_type = 'gpt'
-
-# data_path = '/john10/scr1/baom/wiki_sents.tsv'
-# save_path = f'/john10/scr1/baom/{model_type}/wiki_sents_acts'
-
-# data_path = '/john10/scr1/baom/imp_tokens_data.tsv'
-# save_path = f'/john10/scr1/baom/{model_type}/imp_tokens_acts'
+model_type = 'bert' # 'gpt'
 
 data_path = '/john1/scr1/baom/gender_race_in_wiki.tsv'
 save_path = f'/john1/scr1/baom/{model_type}/gender_race_in_wiki'
 
 save_ext = '.tsv'
 
-save_size = 5000
+save_size = 5000 # // how many samples to save in each subdirectory
 
 random_state = 1
-# frac = 0.02
-frac = 1.0
+frac = 1.0 # 0.02 // fraction of rows to sample from in provided .tsv file
 
 tokenizer = None
 model = None
@@ -105,11 +97,6 @@ for k in range(0, len(df_sub), save_size):
         print(n_docs_consolidated)
         if n_docs_consolidated == max_docs:
             break  # Done
-
-#     df_sub_chunk[f'{model}_tokens'] = tokens_list
-#     df_sub_chunk[f'{model}_hidden_states'] = bert_hidden_states        
-
-#     df_sub_chunk.to_csv(f'{save_path}_{int(k / save_size)}{save_ext}', header=df_sub_chunk.columns, sep='\t')
 
     print(f'Found {n_docs_consolidated} docs & {len(contexts)} contexts and obtained activations of shape {layers[layer].shape}')
     if max_toks:
