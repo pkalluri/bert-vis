@@ -22,12 +22,23 @@ for wiki_dir in wiki_dirs:
                     wiki_file = json.loads(article)
                     title = wiki_file['title']
                     text = wiki_file['text']
+
+                    contained_tokens = []
+                    for i in race_tokens:
+                        if i not in text:
+                            continue
+                        else:
+                            contained_tokens.append(i)
+
+                    if not contained_tokens:
+                        continue
+
                     sentences = sent_tokenize(text)
                     num_sents += len(sentences)
 
                     for i, sent in enumerate(sentences):
                         toks = []
-                        for tok in race_tokens:
+                        for tok in contained_tokens:
                             if tok in sent:
                                 toks.append(tok)
                         if toks:

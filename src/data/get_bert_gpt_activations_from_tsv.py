@@ -18,6 +18,7 @@ max_contexts = None  # Max number of contexts to read or None. If None, this is 
 max_toks = 30  # Max number of tokens in an acceptable document. If None, this is ignored.
 
 model_type = 'bert' # 'gpt'
+device = 0 # GPU info
 
 data_path = '/john1/scr1/baom/gender_race_in_wiki.tsv'
 save_path = f'/john1/scr1/baom/{model_type}/gender_race_in_wiki'
@@ -42,10 +43,15 @@ else:
     print("Incorrect model_type set.")
     exit()
 
+# move the model to the GPU
+torch.cuda.set_device(device)
+device = torch.device("cuda", device)
+model.to(device)
+
 df = pd.read_csv(data_path, sep='\t')
 
+df = df[df['sentence'].map(len) < 512]
 df_sub = df.sample(frac = frac, random_state = random_state)
-df_sub = df_sub[df_sub['sentence'].map(len) < 512]
 
 if 'tokens' in df_sub.columns:
     df_sub.drop(columns=['tokens'], inplace=True)
