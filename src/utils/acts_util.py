@@ -15,16 +15,18 @@ def reduce_acts(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6) -> np.nd
 
     Returns: Reduced acts -- array of shape (LENGTH OF ACTS, DIM)
     """
-    if reduction == 'KMeans':
+    if reduction == 'TSNE':  # neighbor-based
+        reducer = TSNE(n_components=dim)
+        reduced_acts = reducer.fit_transform(acts)
+    elif reduction == 'KMeans':
         cluster_labels = KMeans(n_clusters=dim).fit(acts).labels_
         reduced_acts = np.eye(dim)[cluster_labels]
-        return reduced_acts
     else:
         reducer = ChannelReducer(dim, reduction)
         if reduction == 'NMF':  # NMF requires activations to be positive
             acts = get_positive_activations(acts)
         reduced_acts = reducer._reducer.fit_transform(acts)
-        return reduced_acts
+    return reduced_acts
 
 
 def fit_components(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6) -> (np.ndarray, np.ndarray):
