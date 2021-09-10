@@ -10,14 +10,14 @@ import random
 random.seed(0)
 import sys
 sys.path.insert(0, os.path.abspath('.'))  # add CWD to path
-from src import references as refs
+from src.utils import references as refs
 from src.utils import acts_util
 
 
 # Args
 argparser = argparse.ArgumentParser()
-argparser.add_argument('data_path', help='Data directory containing an activations file,'
-                                         'and the generated KNN file will be put here.')
+argparser.add_argument('data_path', help='Data directory containing an activations file.'
+                                         'The generated KNN file will also be put here.')
 argparser.add_argument('-a', '--algorithm', default='auto', help='which KNN algorithm.')
 argparser.add_argument('-n', '--nneighbors', default=50, help='Set default number of neighbors to get when queried.')
 argparser.add_argument('-o', '--output', default='', help='name of output file')

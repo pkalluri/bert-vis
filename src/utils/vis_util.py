@@ -254,7 +254,7 @@ class Grid:
         self.columns.append(column)
 
     def show(self):
-        show(gridplot(zip(*self.columns)))
+        show(gridplot(zip(*self.columns), toolbar_options=dict(logo=None)))
 
 
 def plot_evolution(labels: List[str], points: List[List], distance_mats=None, colors='limegreen', line_color='black'):
