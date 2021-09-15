@@ -3,11 +3,12 @@ import os
 import json
 from nltk.tokenize import sent_tokenize
 
+# VARIABLES TO CHANGE ---
 root_dir = '/john1/scr1/baom/text'
+save_file = '/john1/scr1/baom/religion_in_wiki.tsv'
 wiki_dirs = [f'{root_dir}/AA', f'{root_dir}/AB', f'{root_dir}/AC']
-
-# search_tokens = ['Asian', 'African', 'Hispanic', 'Latino', 'Native', 'Indigenous', 'Islander', 'White', 'Caucasian']
-search_tokens = ['gender', ' race', 'racial', 'trans ', 'trans-', 'immigration', 'immigrant', 'immigrate']
+search_tokens = ['Muslim', 'Islam', 'Christianity', 'Christian', 'violence']
+# ---
 
 hits = []
 
@@ -25,7 +26,7 @@ for wiki_dir in wiki_dirs:
 
                     contained_tokens = []
                     for i in search_tokens:
-                        if i not in text:
+                        if i.lower() not in text.lower():
                             continue
                         else:
                             contained_tokens.append(i)
@@ -47,4 +48,4 @@ for wiki_dir in wiki_dirs:
                             hits.append(data)
 print("Num sents: ", num_sents)
 df = pd.DataFrame(hits)
-df.to_csv('/john1/scr1/baom/gender_race_in_wiki.tsv', sep="\t", index=False)
+df.to_csv(save_dir, sep="\t", index=False)

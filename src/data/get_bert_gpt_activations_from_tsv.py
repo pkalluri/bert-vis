@@ -10,28 +10,29 @@ import sys
 import ast
 import pandas as pd
 from tqdm import tqdm
+from collections import Counter
 sys.path.insert(0, os.path.abspath('.'))  # add CWD to path
-from src import references
+from src.utils import references as refs
 
+# VARIABLES TO CHANGE ---
 max_docs = None  # Max number of documents to read or None. If None, this is ignored.
 max_contexts = None  # Max number of contexts to read or None. If None, this is ignored.
 max_toks = 30  # Max number of tokens in an acceptable document. If None, this is ignored.
 
 model_type = 'bert' # 'gpt'
-device = 0 # GPU info
 
-data_path = '/john1/scr1/baom/gender_race_in_wiki.tsv'
-save_path = f'/john1/scr1/baom/{model_type}/gender_race_in_wiki'
-
-save_ext = '.tsv'
+data_path = '/sailhome/baom/religion_in_wiki.tsv'
+save_path = f'/jagupard12/scr1/baom/{model_type}/whole_religion_in_wiki'
 
 save_size = 5000 # // how many samples to save in each subdirectory
 
-random_state = 1
-frac = 1.0 # 0.02 // fraction of rows to sample from in provided .tsv file
+frac = 0.1 # 0.02 // fraction of rows to sample from in provided .tsv file
+# ---
 
 tokenizer = None
 model = None
+
+random_state = 1
 
 if model_type == 'bert':
     tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
@@ -43,10 +44,7 @@ else:
     print("Incorrect model_type set.")
     exit()
 
-# move the model to the GPU
-torch.cuda.set_device(device)
-device = torch.device("cuda", device)
-model.to(device)
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 df = pd.read_csv(data_path, sep='\t')
 
@@ -65,17 +63,17 @@ n_docs_consolidated = 0
 n_long_docs = 0
 
 for k in range(0, len(df_sub), save_size):
-
     df_sub_chunk = df_sub.iloc[k:min(k + save_size, len(df_sub) - 1)]
     df_sub_chunk = df_sub_chunk.copy()
 
     for _, row in tqdm(df_sub_chunk.iterrows()):
 
         sent = row['sentence']
-        inputs = tokenizer(sent, return_tensors="pt")
+        inputs = tokenizer(sent, return_tensors="pt").to(device)
         tokens = [tokenizer.decode(i).replace(' ', '') for i in inputs['input_ids'].tolist()[0]]
 
         try:
+            model = model.to(device)
             outputs = model(**inputs)
             hidden_state = outputs.hidden_states
             hidden_state = torch.stack(hidden_state, dim=0)
@@ -94,9 +92,9 @@ for k in range(0, len(df_sub), save_size):
             layer = f'arr_{l}'
 
             if layer not in layers:
-                layers[layer] = hidden_state[l, :, :,].detach().numpy()
+                layers[layer] = hidden_state[l, :, :,].cpu().detach().numpy()
             else:
-                layers[layer] = np.concatenate([layers[layer], hidden_state[l, :, :,].detach().numpy()])
+                layers[layer] = np.concatenate([layers[layer], hidden_state[l, :, :,].cpu().detach().numpy()])
 
         print(f'Doc {n_docs_consolidated}: {data_path} ({len(tokens)} tokens) --> {len(contexts)} total contexts')
         n_docs_consolidated += 1
@@ -112,8 +110,8 @@ for k in range(0, len(df_sub), save_size):
         f'{n_docs_consolidated}docs_{len(contexts)}contexts_{max_toks}maxtokens'
     )
     os.makedirs(out_dir_path)
-    consolidated_contexts_fn = f'{references.CONTEXTS_BASE}.pickle'
-    consolidated_acts_fn = f'{references.ACTIVATIONS_BASE}.npz'
+    consolidated_contexts_fn = f'{refs.contexts_fn}.pickle'
+    consolidated_acts_fn = f'{refs.acts_fn}.npz'
     with open(os.path.join(out_dir_path, consolidated_contexts_fn), 'wb') as f:
         pickle.dump(contexts, f)
     np.savez(os.path.join(out_dir_path, consolidated_acts_fn), **layers)
