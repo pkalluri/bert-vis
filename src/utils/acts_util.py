@@ -6,7 +6,9 @@ The activation is a single vector of length model-width."""
 from lucid.misc.channel_reducer import ChannelReducer
 from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
+import umap
 import numpy as np
+from typing import Dict, List
 
 
 def reduce_acts(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6) -> np.ndarray:
@@ -21,6 +23,9 @@ def reduce_acts(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6) -> np.nd
     elif reduction == 'KMeans':
         cluster_labels = KMeans(n_clusters=dim).fit(acts).labels_
         reduced_acts = np.eye(dim)[cluster_labels]
+    elif reduction == 'UMAP':
+        reducer = umap.UMAP()
+        reduced_acts = reducer.fit_transform(acts)
     else:
         reducer = ChannelReducer(dim, reduction)
         if reduction == 'NMF':  # NMF requires activations to be positive
@@ -123,14 +128,4 @@ def spherize(acts: np.ndarray) -> np.ndarray:
     """
     norms = np.linalg.norm(acts, axis=1).reshape(-1, 1)
     return acts/norms
-
-
-# def distance(act1:np.ndarray, act2:np.ndarray, cosine_distance=True) -> float:
-#     """
-#     Return euclidean or cosine distance between the two acts.
-#     """
-#     if cosine_distance:
-#         act1 = act1/np.linalg.norm(act1)
-#         act2 = act2/np.linalg.norm(act2)
-#     return np.linalg.norm
 
