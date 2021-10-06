@@ -31,7 +31,7 @@ warnings.filterwarnings('ignore')  # temporary, not recommended
 
 @click.command()
 @click.argument('corpus_dir')
-@click.argument('scores')
+@click.argument('scores_fn')
 @click.argument('corpus_filter')
 @click.option('--n_layers', '-l', default=None, type=int, help='Number of layers to analyze. If not specified, use all layers.')
 @click.option('--n_neighbors', '-k', default=None, type=int, help='Number of neighbors to analyze. If not specified, use default.')
@@ -39,9 +39,10 @@ warnings.filterwarnings('ignore')  # temporary, not recommended
 @click.option('--n_classes', '-c', default=100, type=int, help='Number of classes (different tokens) that the models choose between.')
 @click.option('--probe_tok', '-i', is_flag=True, help='If probe_tok, then the process is reversed: probe what the main token\'s \
                                                                 embedding knows about its neighbors.')
+@click.option('--concatenate', '-cc', default=None, type=int, help='If specified, concatenate each layer with the specified layer before probing.')
 @click.option('--note', '-a', default='', type=str, help='Optional note to include in the appended rows.')
-def probe_identity(corpus_dir:str, scores:str, corpus_filter:str, n_layers:int=None, n_neighbors=3, 
-    n_points=10000, n_classes=100, probe_tok=False, note:str=''):
+def probe_identity(corpus_dir:str, scores_fn:str, corpus_filter:str, n_layers:int=None, n_neighbors=3, 
+    n_points=10000, n_classes=100, probe_tok=False, note:str='', concatenate:int=None):
     '''
     Given corpus activations and contexts as well as the name of a filter that will be applied (e.g. contexts with 'top-toks' only), 
     train a logistic regression to probe each activation for its own token.
@@ -50,7 +51,7 @@ def probe_identity(corpus_dir:str, scores:str, corpus_filter:str, n_layers:int=N
     
     Args:
         corpus_dir (str): Corpus directory containing activations.npy and contexts.pickle
-        scores (str): Name of CSV file in corpus directory, containing scores calculated so far.
+        scores_fn (str): Name of CSV file in corpus directory, containing scores calculated so far.
         corpus_filter (str): Name of filter to apply to corpus contexts before running identity probe, e.g. "top-toks"
         n_layers (int, optional): Number of layers to analyze. If not specified, use all layers.
         n_neighbors (int, optional): Number of neighbors to analyze. If not specified, use default.
@@ -59,8 +60,12 @@ def probe_identity(corpus_dir:str, scores:str, corpus_filter:str, n_layers:int=N
         probe_tok (bool, optional): If probe_tok, then the process is reversed: 
                                     logistic regressions probe what the main token's embedding knows about its neighbors.
         note (str, optional): Optional note to include in the appended rows.
+        concatenate (int, optional): If specified, concatenate each layer with specified layer before probing.
+                (This is useful for studying whether certain layers contain different, possibly complementary information.)
     '''
     # include all params
+    params = ' '.join(([f'{arg}={val}' for arg, val in locals().items() if arg not in ['args', 'kwargs']]))
+    print(params)
     params = ' '.join([f'{arg}={val}' for arg, val in locals().items() if arg in ['n_points', 'n_classes', 'probe_tok']])
     note += params
 
@@ -85,39 +90,38 @@ def probe_identity(corpus_dir:str, scores:str, corpus_filter:str, n_layers:int=N
     elif corpus_filter_name=='bert-partial':
         corpus_filter = bert_partial_tok_filter(corpus_toks=corpus_toks, c=n_classes)
     elif corpus_filter_name in ['NN', 'JJ', 'VB', 'RB']:
-        corpus_filter = pos_filter(corpus_contexts=corpus_contexts, pos=corpus_filter_name, c=n_classes)
-    
+        corpus_filter = POS_filter(corpus_toks=corpus_toks, POS=corpus_filter_name, c=n_classes)
+    print(f'Number of of instances: {len(corpus_filter)}')
+
     if n_points: corpus_filter = corpus_filter[:n_points]
 
-    # calculate scores and update scores csv
-    scores_fp = os.path.join(corpus_dir, scores)
+    # calculate scores
+    new_scores = _probe_identity(corpus_acts, corpus_contexts, corpus_filter, 
+        n_layers=n_layers, gaps=range(-1*n_neighbors, n_neighbors+1),
+        probe_tok=probe_tok, layer_to_concat=concatenate)
+    new_scores['filter'] = corpus_filter_name
+    new_scores['note'] = note
+    # update csv
+    scores_fp = os.path.join(corpus_dir, scores_fn)
     if os.path.exists(scores_fp):
         scores = pd.read_csv(scores_fp)
     else:
         scores = pd.DataFrame(columns=['layer','gap','score','filter', 'note'])
-    layers = list(corpus_acts.keys())[:n_layers] if n_layers else None
-    scores = scores.append(_probe_identity(corpus_acts, corpus_contexts, corpus_filter, 
-        filter_name=corpus_filter_name, layers=layers, gaps=range(-1*n_neighbors, n_neighbors+1),
-        probe_tok=probe_tok, note=note),
-        ignore_index=True)
+    scores = scores.append(new_scores, ignore_index=True)
     scores.to_csv(scores_fp, index=False)
     # update heatmaps
     identity_heatmaps(scores, probe_tok=probe_tok).write_html(scores_fp.split('.')[-2]+'.html')
 
 
-# def _probe_identity_multi_partitions(corpus_acts, corpus_contexts, corpus_filter, filter_name='', layers=None,
-
-
-def _probe_identity(corpus_acts, corpus_contexts, corpus_filter, filter_name='', layers=None,
-                       gaps=range(-3,4), train_frac=.8, probe_tok=False, verbose=False, note:str=''):
+def _probe_identity(corpus_acts, corpus_contexts, corpus_filter, n_layers:int=None,
+                       gaps=range(-3,4), train_frac=.8, probe_tok=False, verbose=False,
+                       layer_to_concat:int=None):
     '''
     Given activations and contexts and a filter, train a logistic regression to probe the activation for its own token.
     Also train logistic regressions for several of its neighbors to probe those neighboring activations for the original token.
     If probe_tok, then the process is reversed: logistic regressions probe what the main token's embedding knows about its neighbors.
     Return a pandas dataframe.
-    '''
-    layers = layers or list(corpus_acts.keys())
-    
+    '''    
     # calculate data filters
     acts_filters = {}
     contexts_filters = {}
@@ -144,16 +148,25 @@ def _probe_identity(corpus_acts, corpus_contexts, corpus_filter, filter_name='',
     # get target data
     corpus_toks = np.array([doc[pos] for doc, pos in corpus_contexts])
     target_toks = {gap: corpus_toks[contexts_filter] for gap, contexts_filter in contexts_filters.items()}
-        
+    layers = list(corpus_acts.keys())
+    if layer_to_concat != None:
+        print(layer_to_concat)
+        layer_to_concat = layers[layer_to_concat]
+        print(layer_to_concat)
+        _acts_to_concat = corpus_acts[layer_to_concat]
+    if not n_layers: n_layers = len(layers)
+
     model = LogisticRegression(max_iter=200, solver='saga', n_jobs=4)
     scaler = StandardScaler()
     scores = []
-    for layer in layers[:len(layers)]:
+    for layer in layers[:n_layers]:
         print(layer,'...', end=' ', flush=True)
         _acts = corpus_acts[layer]
         for gap in gaps:
             print(gap,'...', end=' ', flush=True)
             _input_acts = _acts[acts_filters[gap]]
+            if layer_to_concat != None:
+                _input_acts = np.hstack([_input_acts, _acts_to_concat[acts_filters[gap]]])
             _input_acts = scaler.fit_transform(_input_acts)  # Standarize features
             _target_toks = target_toks[gap]
             n_train = int(train_frac * len(_input_acts))
@@ -161,23 +174,25 @@ def _probe_identity(corpus_acts, corpus_contexts, corpus_filter, filter_name='',
             model.fit(_input_acts[:n_train], _target_toks[:n_train])
             if verbose: print('calculating accuracy...')
             score = model.score(_input_acts[n_train:], _target_toks[n_train:])
-            scores.append([layer,gap,score,filter_name, note])
+            scores.append([f'{layer_to_concat}+{layer}',gap,score])
             if verbose: print(f'{layer}:{score}', flush=True)
         print()
-    scores = pd.DataFrame(scores, columns=['layer','gap','score','filter', 'note'])
+    scores = pd.DataFrame(scores, columns=['layer','gap','score'])
     print(scores)
     return scores
 
 
 def identity_heatmaps(scores, probe_tok=False):
     '''Given a pandas dataframe from the probing identity analysis, create a heatmap visualization'''
-    title = 'Info in token' if probe_tok else 'Info in neighbors'
+    title = 'Info in token' if probe_tok else 'Info about token'
     fig = px.scatter(data_frame=scores, x='gap', y='layer', size='score', color='score', size_max=10,
         color_continuous_scale=px.colors.sequential.Rainbow, title=title,
         facet_row='filter')
     # layout
     n_plots = len(scores['filter'].unique())
-    fig.update_layout(xaxis_dtick=1, xaxis_title='Relative position', yaxis_title='', autosize=False, height=500, width=n_plots*200+100)
+fig.update_layout(width=n_plots*250+100, height=350, 
+                  xaxis_title='Relative position', xaxis_showticklabels=False,
+                  yaxis_title='Layers', yaxis_showticklabels=False,)
     fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))     
     for axis in fig.layout:
         if type(fig.layout[axis]) == go.layout.YAxis:
@@ -186,7 +201,8 @@ def identity_heatmaps(scores, probe_tok=False):
 
 
 def selected_toks_filter(corpus_toks, selected_toks):
-    '''Given corpus toks and selected toks, return only the indices that contain a selected tok.'''
+    '''Given corpus toks and selected toks, return only the indices with a selected tok.'''
+    print('Number of selected tokens: ', len(selected_toks))
     return [i for i, tok in enumerate(corpus_toks) if tok in selected_toks]
 
 
@@ -210,20 +226,21 @@ def bert_partial_tok_filter(corpus_toks, c=100):
     return selected_toks_filter(corpus_toks, selected_toks)
 
 
-# def pos_filter(corpus_toks, c=100):
-#     '''Given corpus's contexts' tokens, return only the indices that satisfy the filter.'''
-#     ordered_toks = list(zip(*collections.Counter(corpus_toks).most_common(len(corpus_toks))))[0]
-#     selected_toks = []
-#     for i, tok in enumerate(ordered_contexts):
-#         selected_toks[tok for i, tok in enumerate(ordered_toks) if tok.startswith('##')][:c]
-#     return selected_toks_filter(corpus_toks, selected_toks)
+def POS_tag(tok): 
+    '''Simple method for guessing tok's part of speech tag. Doesn't use context.'''
+    return nltk.pos_tag([tok,])[0][1] if tok else ''
 
 
-# def noun_filter(corpus_toks, c=100):
-#     '''Given corpus's contexts' tokens, return only the indices that satisfy the filter.'''
-#     selected_toks = random.sample(
-#         list(zip(*collections.Counter(corpus_toks).most_common(min(c*10, len(corpus_toks)))))[0], c)
-#     return [i for i, tok in enumerate(corpus_toks) if tok in selected_toks]
+def POS_filter(corpus_toks, POS:str='NN', c=100):
+    '''Given corpus's contexts' tokens, return only the indices that satisfy the filter.'''
+    ordered_toks = list(zip(*collections.Counter(corpus_toks).most_common(len(corpus_toks))))[0]
+    selected_toks = []
+    for tok in ordered_toks:
+        if POS_tag(tok) == POS:
+            selected_toks.append(tok)
+        if len(selected_toks) == c:
+            break
+    return selected_toks_filter(corpus_toks, selected_toks)
 
 
 if __name__ == '__main__':
