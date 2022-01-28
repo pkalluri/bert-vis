@@ -65,7 +65,9 @@ def channels_to_rgbs(X):
         # convert the ith column (list of values) into a list of vectors all in the chosen direction
         rgbs += X[..., i, None] * color
     # We now have 3D vectors, but we need to normalize them into RGBs
-    rgbs /= 1e-4 + np.linalg.norm(rgbs, axis=-1, keepdims=True)  # normalize so each 3-dim vector is unit length
+    rgbs *= 2
+    # rgbs /= 1e-4 + np.mean(np.linalg.norm(rgbs, axis=-1, keepdims=True))  # normalize so each 3-dim vector is in sphere
+    # rgbs /= 1e-4 + np.linalg.norm(rgbs, axis=-1, keepdims=True)  # normalize so each 3-dim vector is unit length
     rgbs *= 255
     return rgbs.astype(int)
 
