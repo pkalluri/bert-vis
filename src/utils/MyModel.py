@@ -6,8 +6,9 @@ from transformers import BertTokenizer, BertModel, GPT2Model, GPT2Tokenizer
 import torch
 import itertools
 from .Token import Token
-from .Activations import Activations
 from utils.ModelType import ModelType, get_generic, berts, gpts
+Layer_Activations = np.ndarray
+
 
 
 class MyModel:
@@ -25,7 +26,7 @@ class MyModel:
         self.model.eval()
 
 
-    def get_docs_acts(self, docs: List[str], tokenized=False, layers: List[str] = None) -> (List[Token], Dict[str, Activations]):
+    def get_docs_acts(self, docs: List[str], tokenized=False, layers: List[str] = None) -> (List[Token], Dict[str, Layer_Activations]):
         """Given a list of docs, tokenize and return all toks, along with layers' hidden activations."""
         toks = []
         acts = {}
@@ -38,9 +39,7 @@ class MyModel:
                 inputs = self.tokenizer(doc, return_tensors="pt")
             elif self.model_type in gpts:
                 if tokenized:
-#                     encoded_chunks = [self.tokenizer.encode(type_) for type_ in doc]
-#                     ids = [id_ for chunk in encoded_chunks for id_ in chunk]
-                    ids = self.tokenizer.convert_tokens_to_ids(doc)
+                    ids = [id_ for type_ in doc for id_ in self.tokenizer.encode(type_) if self.tokenizer.encode(type_)]
                     inputs = {'input_ids': torch.Tensor([ids]).to(torch.long),
                                 'attention_mask': torch.tensor([[1]*len(ids)])}
                 else:
@@ -48,7 +47,6 @@ class MyModel:
             outputs = self.model(**inputs)
             # save new_types
             new_types = [self.tokenizer.decode(i) for i in inputs['input_ids'].tolist()[0]]
-            new_types = [type_.replace(' ','') for type_ in new_types]
             new_toks = [Token(new_types, pos, self.model_type) for pos in range(len(new_types))]
             toks.extend(new_toks)
 
@@ -66,13 +64,13 @@ class MyModel:
         return toks, acts
 
 
-    def get_doc_acts(self, doc:str) -> (List[str], Dict[str, Activations]):
+    def get_doc_acts(self, doc:str) -> (List[str], Dict[str, Layer_Activations]):
         """Given a doc, tokenize and return layers' hidden activations."""
         toks, acts = self.get_docs_acts([doc])
         return toks[0].doc, acts
 
 
-    def get_toks_acts(self, toks:List[Token]) -> Dict[str, Activations]:
+    def get_toks_acts(self, toks:List[Token]) -> Dict[str, Layer_Activations]:
         """Given a list of tokens, return layers' hidden activations."""
         acts = {}
         for tok in toks:
@@ -85,6 +83,6 @@ class MyModel:
         return acts
 
 
-    def get_tok_acts(self, tok:Token) -> Dict[str, Activations]:
+    def get_tok_acts(self, tok:Token) -> Dict[str, Layer_Activations]:
         """Given one token, return layers' hidden activations."""
         return self.get_toks_acts([tok,])
