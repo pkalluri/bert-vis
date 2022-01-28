@@ -4,3 +4,5 @@ big-data
 .DS_Store
 .idea/
 *.html
+src-backup*
+archive
