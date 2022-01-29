@@ -9,6 +9,10 @@ from sklearn.cluster import KMeans
 import umap
 import numpy as np
 from typing import Dict, List
+import math
+
+
+Acts = Dict[str, np.ndarray]
 
 
 def reduce_acts(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6) -> np.ndarray:
@@ -129,3 +133,26 @@ def spherize(acts: np.ndarray) -> np.ndarray:
     norms = np.linalg.norm(acts, axis=1).reshape(-1, 1)
     return acts/norms
 
+
+def get_angles(m, v):
+    """
+    For a nxd matrix of vectors and a d-length vector, calculate the n angles.
+    """  
+    m = np.array(m)
+    v = np.array(v)
+    if len(m.shape) == 1:  # if m was a vector not a matrix
+        m = m.reshape(1, -1)
+    m = (m.T/np.linalg.norm(m, axis=1)).T
+    v = (v.T/np.linalg.norm(v, axis=0))
+    return np.arccos(np.clip(np.dot(m,v), -1, 1))*180/math.pi
+
+
+def get_euclidean_distances(m, v):
+    """
+    For a nxd matrix of vectors and a d-length vector, calculate the n euclidean distances.
+    """  
+    m = np.array(m)
+    v = np.array(v)
+    if len(m.shape) == 1:  # if m was a vector not a matrix
+        m = m.reshape(1, -1)
+    return np.linalg.norm(m-v)

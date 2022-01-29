@@ -22,6 +22,7 @@ args = argparser.parse_args()
 contexts = [] if args.contexts else None
 acts = {} if args.acts else None
 first_subdir = True
+if not os.path.exists(args.out_data_dir): os.mkdir(args.out_data_dir)
 for subdir in glob.iglob(os.path.join(args.data_dir, '*')):
     print(f'Found {subdir}.')
     if os.path.isdir(subdir):
@@ -41,10 +42,8 @@ for subdir in glob.iglob(os.path.join(args.data_dir, '*')):
                 for layer in layers:
                     acts[layer] = np.concatenate([acts[layer], new_acts[layer]])
 
-print('Writing.')
-if not os.path.exists(args.out_data_dir):
-    os.mkdir(args.out_data_dir)
-if args.contexts:
-    pickle.dump(contexts, open(os.path.join(args.out_data_dir, refs.contexts_fn), 'wb'))
-if args.acts:
-    np.savez(os.path.join(args.out_data_dir, refs.acts_fn), **acts)
+        print('Writing.')
+        if args.contexts:
+            pickle.dump(contexts, open(os.path.join(args.out_data_dir, refs.toks_fn), 'wb'))
+        if args.acts:
+            np.savez(os.path.join(args.out_data_dir, refs.acts_fn), **acts)
