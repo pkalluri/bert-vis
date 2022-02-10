@@ -1,9 +1,33 @@
 """Helpers for handling contexts. Contexts are typically tuples (doc's tokens, index of embedded token)"""
 import sys
 import os
-sys.path.insert(0, os.path.abspath('../..'))
+from typing import List, Tuple
 from utils import html_util
 
+
+Doc = List[str]
+Pos = int
+Context = Tuple[Doc, Pos]
+Contexts = List[Context]
+
+
+def get_tok(doc, pos):
+    return doc[pos]
+
+get_type = get_tok  # for convenience while we switch terminology
+
+def get_doc(doc, pos):
+    return doc
+
+get_context = get_doc  # for convenience while we switch terminology
+
+
+def get_pos(doc, pos):
+    return pos
+
+def replace(doc, pos, new_tok):
+    return ([new_tok if i==pos else tok for i, tok in enumerate(doc)], 
+            pos)
 
 def bracket(s):
     return f'[[{s}]]'
@@ -16,6 +40,8 @@ def doc_str(toks):
 def context_str(toks, pos, marker=bracket, masker=None, masker_marker=None, token_styler=lambda a: a):
     """Get a string representation of the context: i.e. the doc with emphasis on the embedded token."""
     return contexts_str(toks, [pos], marker=marker, masker=masker, masker_marker=masker_marker, token_styler=token_styler)
+
+tok_str = context_str
 
 
 def contexts_str(toks, positions, marker=bracket, masker=None, masker_marker=None, token_styler=lambda a: a):
@@ -67,11 +93,11 @@ def abbreviated_context(toks, pos, n_context_tokens=2, marker=bracket, masker=No
         start_index = 0
         new_tok_pos = pos
     end_index = min(pos + n_context_tokens + 1, len(toks))
-    return context_str(toks[start_index: end_index], new_tok_pos, marker=marker, masker=masker,
-                       masker_marker=masker_marker, token_styler=token_styler)
+    return '...'+context_str(toks[start_index: end_index], new_tok_pos, marker=marker, masker=masker,
+                       masker_marker=masker_marker, token_styler=token_styler)+'...'
 
 
-def get_doc(contexts, acts, i):
+def get_doc_from_corpus(contexts, acts, i):
     """
     Get the ith doc's contexts and activations.
     """
@@ -86,7 +112,7 @@ def get_doc(contexts, acts, i):
     return doc, doc_acts
 
 
-def get_doc_ids(contexts, i):
+def get_doc_ids_from_corpus(contexts, i):
     """
     Get the ith doc's contexts and activations.
     """
