@@ -6,3 +6,6 @@ big-data
 *.html
 src-backup*
 archive
+out
+*.sh
+*._.DS_Store
