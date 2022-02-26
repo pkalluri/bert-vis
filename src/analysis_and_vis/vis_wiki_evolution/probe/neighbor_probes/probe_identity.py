@@ -25,8 +25,8 @@ from collections.abc import Iterable
 
 import utils.references as refs
 from utils.acts_util import normalize, spherize
-from utils.context_util import get_tok, get_pos, get_doc
-from utils.context_util import abbreviated_context as context_txt
+from utils.context_util import get_type, get_pos, get_doc
+from utils.context_util import abbreviated_context as tok_txt
 from utils.context_attributes import *
 
 
@@ -59,18 +59,18 @@ from utils.context_attributes import *
               default=100, type=int)
 def token_probe(corpus_dir:str, corpus_filter:str, scores_filename:str,
                 n_layers:int, concatenate:int, n_neighbors:int,
-                n_points:int, n_types:int, note:str, threshold:int, max_iter: int = 100):
+                n_points:int, n_types:int, note:str, threshold:int, max_iter: int = 5000):
     """
-    Given corpus activations and contexts as well as the name of a filter that will be applied (e.g. contexts with
+    Given corpus activations and toks as well as the name of a filter that will be applied (e.g. toks with
     'top-toks' only), train a logistic regression to probe each activation for its own token. Also train logistic
     regressions for several of its neighbors to probe those neighboring activations for the original token. Update a
     CSV file and visualization with the scores.
 
     Args:
 
-        corpus_dir (str): Path to corpus directory containing activations.npz and contexts.pickle
+        corpus_dir (str): Path to corpus directory containing activations.npz and toks.pickle
 
-        corpus_filter (str): Name of filter to apply to corpus contexts before running identity probe.
+        corpus_filter (str): Name of filter to apply to corpus toks before running identity probe.
         One of: top, random, bert-partial, gpt-partial
 
     """
@@ -84,45 +84,47 @@ def token_probe(corpus_dir:str, corpus_filter:str, scores_filename:str,
 
     print('Loading corpus and acts...')
     corpus_dir = os.path.abspath(corpus_dir)
-    corpus_contexts = pickle.load(open(os.path.join(corpus_dir, refs.toks_fn), 'rb'))
+    corpus_toks = pickle.load(open(os.path.join(corpus_dir, refs.toks_fn), 'rb'))
     corpus_acts = np.load(os.path.join(corpus_dir, refs.acts_fn))
     layers = corpus_acts.files
 
     print('Filter for tokens of interest...')
     if attribute == 'top':
-        corpus_toks = np.array([get_tok(*context) for context in corpus_contexts])
-        top_toks = list(zip(*collections.Counter(corpus_toks).most_common(n_types)))[0]
-    filt = {'top': lambda context: get_tok(*context) in top_toks,
-            'random': lambda context: True,
+        corpus_types = np.array([get_type(*tok) for tok in corpus_toks])
+        top_types = list(zip(*collections.Counter(corpus_types).most_common(n_types)))[0]
+    filt = {'top': lambda tok: get_type(*tok) in top_types,
+            'random': lambda tok: True,
             'gpt-partial': is_gpt_partial,
             'bert-partial': is_bert_partial}[attribute]
     # filter for all toks that satisfy attribute and have required neighbors
     neighbors = range(-1 * n_neighbors, n_neighbors + 1)
-    valid_ids_and_toks = []
-    corpus_contexts_shuffled = random.sample(list(enumerate(corpus_contexts)), len(corpus_contexts))
-    for (id_, tok) in corpus_contexts_shuffled:
+    valid_ids_and_types = []
+    corpus_toks_shuffled = random.sample(list(enumerate(corpus_toks)), len(corpus_toks))
+    for (id_, tok) in corpus_toks_shuffled:
         if ((filt(tok)) and
                 (get_pos(*tok) + min(neighbors) in range(0, len(get_doc(*tok)))) and
-                (get_pos(*tok) + max(neighbors) in range(0, len(get_doc(*tok))))):
-            valid_ids_and_toks.append((id_, get_tok(*tok)))
+                (get_pos(*tok) + max(neighbors) in range(0, len(get_doc(*tok)))) and
+                (get_type(*tok) not in ['\n', '.', '[CLS]', '[SEP]'])):
+            valid_ids_and_types.append((id_, get_type(*tok)))
     # choose sufficiently common types in this set of tokens
     valid_types = [tok for tok, count in
-                   collections.Counter(list(zip(*valid_ids_and_toks))[1]).items()
+                   collections.Counter(list(zip(*valid_ids_and_types))[1]).items()
                    if count > threshold]
     target_types = random.sample(valid_types, min(n_types, len(valid_types)))
     print(f'\t(Targets: {target_types})')
     # get sufficient tokens of each type
     target_ids = {type_: [] for type_ in target_types}
-    for id_, tok in valid_ids_and_toks:
+    for id_, tok in corpus_toks_shuffled:
         for type in target_types:
-            if len(target_ids[type]) < n_points:
-                target_ids[type].append(id_)
+            if get_type(*tok) == type and len(target_ids[type]) < n_points:
+                target_ids[type].append(id_) # is this right? should i be adding number or something else?
         if all([len(ids) == n_points for type_, ids in target_ids.items()]):
             break  # found all tokens needed, stop looking
     target_ids = [id_ for type_, ids in target_ids.items() for id_ in ids]  # flatten
+    random.shuffle(target_ids)
 
     print('Training probes...')
-    scores = _tok_probe(corpus_acts, corpus_contexts, target_ids,
+    scores = _tok_probe(corpus_acts, corpus_toks, target_ids,
                         n_layers=n_layers, neighbors=range(-1 * n_neighbors, n_neighbors + 1),
                         layer_to_concat=concatenate)
     # update csv and heatmap
@@ -138,7 +140,7 @@ def token_probe(corpus_dir:str, corpus_filter:str, scores_filename:str,
     identity_heatmaps(scores_table).write_html(scores_fp.split('.')[-2] + '.html')
 
 
-def _tok_probe(corpus_acts, corpus_contexts,
+def _tok_probe(corpus_acts, corpus_toks,
                target_ids: List[int],
                n_layers: int = None,
                neighbors=[-3, -2, -1, 0, 1, 2, 3],
@@ -155,7 +157,7 @@ def _tok_probe(corpus_acts, corpus_contexts,
 
     # prep targets
     target_ids = np.array(target_ids)
-    target_toks = [get_tok(*corpus_contexts[id_]) for id_ in target_ids]
+    target_types = [get_type(*corpus_toks[id_]) for id_ in target_ids]
 
     # probe
     model = LogisticRegression(max_iter=max_iter, solver='saga', n_jobs=4)
@@ -176,13 +178,13 @@ def _tok_probe(corpus_acts, corpus_contexts,
             if layer_to_concat != None:
                 _input_acts = np.hstack([_input_acts,
                                          _extra_acts[target_ids + neigh]])
-            _input_acts = scaler.fit_transform(_input_acts)  # standarize 
+            _input_acts = scaler.fit_transform(_input_acts)  # standarize
             if verbose: print('fit...')
-            model.fit(_input_acts[:n_train], target_toks[:n_train])
+            model.fit(_input_acts[:n_train], target_types[:n_train])
             if verbose: print('evaluate...')
-            score = model.score(_input_acts[n_train:], target_toks[n_train:])
+            score = model.score(_input_acts[n_train:], target_types[n_train:])
             probs = model.predict_proba(_input_acts[n_train:])
-            target_idxes = [list(model.classes_).index(tok) for tok in target_toks[n_train:]]
+            target_idxes = [list(model.classes_).index(tok) for tok in target_types[n_train:]]
             target_probs = probs[np.arange(len(probs)), target_idxes].mean()
             scores.append([layer_name, neigh, score, target_probs])
             if verbose: print(scores)
