@@ -4,3 +4,12 @@ big-data
 .DS_Store
 .idea/
 *.html
+src-backup*
+archive
+Archive
+out
+*.sh
+*._.DS_Store
+testing-plotly
+*figs
+in_progress

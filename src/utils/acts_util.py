@@ -3,12 +3,15 @@ An activation is a representation of a particular in-context token,
 as represented at a particular layer of a model.
 The activation is a single vector of length model-width."""
 
-from lucid.misc.channel_reducer import ChannelReducer
 from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
 import umap
 import numpy as np
 from typing import Dict, List
+import math
+
+
+Acts = Dict[str, np.ndarray]
 
 
 def reduce_acts(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6) -> np.ndarray:
@@ -17,6 +20,9 @@ def reduce_acts(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6) -> np.nd
 
     Returns: Reduced acts -- array of shape (LENGTH OF ACTS, DIM)
     """
+    print('Only certain python versions work with Lucid and thus this implementation. '
+          'Let\'s check if you can load Lucid.')
+    from lucid.misc.channel_reducer import ChannelReducer
     if reduction == 'TSNE':  # neighbor-based
         reducer = TSNE(n_components=dim)
         reduced_acts = reducer.fit_transform(acts)
@@ -47,6 +53,9 @@ def fit_components(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6) -> (n
         reduced_acts = np.eye(dim)[kmeans.labels_]
         components = kmeans.cluster_centers_
     else:
+        print('Only certain python versions work with Lucid and thus this implementation. '
+              'Let\'s check if you can load Lucid.')
+        from lucid.misc.channel_reducer import ChannelReducer
         reducer = ChannelReducer(dim, reduction)
         if reduction == 'NMF':  # NMF requires activations to be positive
             acts = get_positive_activations(acts)
@@ -69,6 +78,9 @@ def fit_reducer(acts: np.ndarray, reduction: str = 'NMF', dim: int = 6):
         reducer = TSNE(n_components=dim)
         reduced_acts = reducer.fit_transform(acts)
     else:  # decomposition approach
+        print('Only certain python versions work with Lucid and thus this implementation. '
+              'Let\'s check if you can load Lucid.')
+        from lucid.misc.channel_reducer import ChannelReducer
         reducer = ChannelReducer(dim, reduction)
         if reduction == 'NMF':  # NMF requires activations to be positive
             acts = get_positive_activations(acts)
@@ -129,3 +141,26 @@ def spherize(acts: np.ndarray) -> np.ndarray:
     norms = np.linalg.norm(acts, axis=1).reshape(-1, 1)
     return acts/norms
 
+
+def get_angles(m, v):
+    """
+    For a nxd matrix of vectors and a d-length vector, calculate the n angles.
+    """  
+    m = np.array(m)
+    v = np.array(v)
+    if len(m.shape) == 1:  # if m was a vector not a matrix
+        m = m.reshape(1, -1)
+    m = (m.T/np.linalg.norm(m, axis=1)).T
+    v = (v.T/np.linalg.norm(v, axis=0))
+    return np.arccos(np.clip(np.dot(m,v), -1, 1))*180/math.pi
+
+
+def get_euclidean_distances(m, v):
+    """
+    For a nxd matrix of vectors and a d-length vector, calculate the n euclidean distances.
+    """  
+    m = np.array(m)
+    v = np.array(v)
+    if len(m.shape) == 1:  # if m was a vector not a matrix
+        m = m.reshape(1, -1)
+    return np.linalg.norm(m-v)
